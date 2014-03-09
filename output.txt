@@ -1,0 +1,4 @@
+-------- PostgreSQL JDBC Connection Testing --------
+-------- PostgreSQL JDBC Driver Registered! --------
+-------- PostgreSQL connection established! --------
+--------    PostgreSQL connection closed!   --------
