@@ -37,7 +37,8 @@ public class BankAccounts extends JInternalFrame {
 		add(panel);
 	}
 
-	private void refresh() {
+	public void refresh() {
+		con.setBankAccounts();
 		Object[][] data = new Object[con.getBankAccounts().size()][8];
 		for (int i = 0; i < con.getBankAccounts().size(); i++) {
 			data[i][0] = con.getBankAccounts().get(i).getRelation_number();
@@ -71,6 +72,7 @@ public class BankAccounts extends JInternalFrame {
 				column.setPreferredWidth(50);
 			}
 		}
+		panel.removeAll();
 		panel.add(scrollPane);
 		panel.updateUI();
 	}

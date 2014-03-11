@@ -1,10 +1,3 @@
-DELETE from stock_value;
-DELETE from title;
-DELETE from broker;
-DELETE from bank_account;
-DELETE from company;
-
-
 --COMPANIES
 INSERT INTO company(market_code, brand_name, rating, capital, currency)
 VALUES ('AAPL', 'Apple Inc.', 8, 499.35, 'USD');

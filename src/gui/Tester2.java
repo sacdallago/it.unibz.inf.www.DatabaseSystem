@@ -1,9 +1,17 @@
 package gui;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.swing.JComboBox;
@@ -16,14 +24,19 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
+import utilities.Timer;
 import core.Container;
 import core.Database;
 
 public class Tester2 {
 	private static JMenuItem accountTable, brokerTable, companyTable, stockTable, titleTable;
 	private static JMenuItem newAccount, newBroker, newCompany, newStock, newTitle;
-	private static JMenuItem delete;
+	private static JMenuItem createSchema, destroySchema, clearAllData, loadData;
+	private static JMenuItem modify;
     private static MyFrame frame;
     private static JDesktopPane desktopFrame;
     private static Database db;
@@ -33,10 +46,14 @@ public class Tester2 {
     private static HashMap<String, JInternalFrame> tables = new HashMap<String, JInternalFrame>();
 
     public static void main(String[] args) {
+    	ArrayList<String> loginInfo = login(frame);
+        db = new Database(loginInfo.get(0), loginInfo.get(1), loginInfo.get(2), loginInfo.get(3));
+        con = new Container(db);
+        
     	schema = new HashMap<String,String>();
     	
     	schema.put("company", "market_code");
-    	schema.put("bank_account", "iban,bic");
+    	schema.put("bank_account","bic,iban");
     	schema.put("broker", "broker_number");
     	schema.put("title", "title_number,market_code");
     	schema.put("stock_value", "time,title_number,market_code");
@@ -46,65 +63,16 @@ public class Tester2 {
         JMenu mainMenu = new JMenu("Menu");
         JMenu tablesMenu = new JMenu("Tables");
         JMenu newMenu = new JMenu("New");
+        JMenu databaseMenu = new JMenu("Database");
         
         bar.add(mainMenu);
+        bar.add(databaseMenu);
         mainMenu.add(newMenu);
         bar.add(tablesMenu);
         
-        db = new Database("172.16.9.182", "db", "sacdallago", "ciaociao3");
-        con = new Container(db);
         
         desktopFrame = new JDesktopPane();
         
-        /////////TABLES
-        accountTable = new JMenuItem("Show Accounts");
-        tablesMenu.add(accountTable);
-        accountTable.addActionListener(new Listener());
-
-        brokerTable = new JMenuItem("Show Brokers");
-        tablesMenu.add(brokerTable);
-        brokerTable.addActionListener(new Listener());
-        
-        companyTable = new JMenuItem("Show Companies");
-        tablesMenu.add(companyTable);
-        companyTable.addActionListener(new Listener());
-        
-        stockTable = new JMenuItem("Show Stock Values");
-        tablesMenu.add(stockTable);
-        stockTable.addActionListener(new Listener());
-        
-        titleTable = new JMenuItem("Show Titles");
-        tablesMenu.add(titleTable);
-        titleTable.addActionListener(new Listener());
-        
-        
-        /////////INSERT INTO DB
-        newAccount = new JMenuItem("Insert New Account");
-        newMenu.add(newAccount);
-        newAccount.addActionListener(new Listener());
-        
-        newBroker = new JMenuItem("Insert New Broker");
-        newMenu.add(newBroker);
-        newBroker.addActionListener(new Listener());
-        
-        newCompany = new JMenuItem("Insert New Company");
-        newMenu.add(newCompany);
-        newCompany.addActionListener(new Listener());
-        
-        newStock = new JMenuItem("Insert New Stock Value");
-        newMenu.add(newStock);
-        newStock.addActionListener(new Listener());
-        
-        newTitle = new JMenuItem("Insert New Title");
-        newMenu.add(newTitle);
-        newTitle.addActionListener(new Listener());
-        
-        /////////MAIN
-        
-        delete = new JMenuItem("Delete");
-        mainMenu.add(delete);
-        delete.addActionListener(new Listener());
-
         /////////NAMING
         tables.put("accounts",new BankAccounts(con));
         tables.put("brokers",new Brokers(con));
@@ -121,6 +89,184 @@ public class Tester2 {
         for(JInternalFrame a : tables.values()){
         	a.hide();
         }
+        
+        Listener listen = new Listener();
+        
+        /////////TABLES
+        accountTable = new JMenuItem("Show Accounts");
+        tablesMenu.add(accountTable);
+        accountTable.addActionListener(listen);
+
+        brokerTable = new JMenuItem("Show Brokers");
+        tablesMenu.add(brokerTable);
+        brokerTable.addActionListener(listen);
+        
+        companyTable = new JMenuItem("Show Companies");
+        tablesMenu.add(companyTable);
+        companyTable.addActionListener(listen);
+        
+        stockTable = new JMenuItem("Show Stock Values");
+        tablesMenu.add(stockTable);
+        stockTable.addActionListener(listen);
+        
+        titleTable = new JMenuItem("Show Titles");
+        tablesMenu.add(titleTable);
+        titleTable.addActionListener(listen);
+        
+        tablesMenu.addSeparator();
+        
+        final JMenuItem lastRefresh = new JMenuItem("Last Refresh: Never");
+        lastRefresh.setEnabled(false);
+        
+        final JMenuItem autoRefreshMenu = new JMenuItem("Set autorefresh ON");
+        tablesMenu.add(autoRefreshMenu);
+        autoRefreshMenu.addActionListener(new ActionListener(){
+        	boolean autoRefreshCheck = false;
+        	Thread autosync;
+        	
+			public void actionPerformed(ActionEvent e) {
+				if(autoRefreshCheck){
+					autosync.stop();
+					autoRefreshMenu.setText("Set autorefresh ON");
+					autoRefreshCheck = false;
+				} else {
+					autosync = new Thread(){
+		            	public void run(){
+		            		while(true){
+		            			try {
+			    					Thread.sleep(30000);
+			    					((BankAccounts) tables.get("accounts")).refresh();
+			    					((Brokers) tables.get("brokers")).refresh();
+			    					((Companies) tables.get("companies")).refresh();
+			    					((StockValues) tables.get("stockvalues")).refresh();
+			    					((Titles) tables.get("titles")).refresh();
+			    					lastRefresh.setText("Last Refresh: "+Timer.getTime());
+			    				} catch (InterruptedException e) {
+			    				}
+		            		}
+		            	}
+		            };
+		            autosync.start();
+					autoRefreshMenu.setText("Set autorefresh OFF");
+					autoRefreshCheck = true;
+				}
+			}
+        });
+        
+        final JMenuItem manualRefresh = new JMenuItem("Refresh Tables");
+        tablesMenu.add(manualRefresh);
+        manualRefresh.addActionListener(new ActionListener(){
+        	
+			public void actionPerformed(ActionEvent e) {
+				((BankAccounts) tables.get("accounts")).refresh();
+				((Brokers) tables.get("brokers")).refresh();
+				((Companies) tables.get("companies")).refresh();
+				((StockValues) tables.get("stockvalues")).refresh();
+				((Titles) tables.get("titles")).refresh();
+				lastRefresh.setText("Last Refresh: "+Timer.getTime());
+			}
+        });
+        
+        tablesMenu.add(lastRefresh);
+        
+        /////////INSERT INTO DB MENU
+        newAccount = new JMenuItem("Insert New Account");
+        newMenu.add(newAccount);
+        newAccount.addActionListener(listen);
+        
+        newBroker = new JMenuItem("Insert New Broker");
+        newMenu.add(newBroker);
+        newBroker.addActionListener(listen);
+        
+        newCompany = new JMenuItem("Insert New Company");
+        newMenu.add(newCompany);
+        newCompany.addActionListener(listen);
+        
+        newStock = new JMenuItem("Insert New Stock Value");
+        newMenu.add(newStock);
+        newStock.addActionListener(listen);
+        
+        newTitle = new JMenuItem("Insert New Title");
+        newMenu.add(newTitle);
+        newTitle.addActionListener(listen);
+        
+        /////////DB MENU
+        final JMenuItem advanced = new JMenuItem("Enable Database Operations");
+        databaseMenu.add(advanced);
+        advanced.addActionListener(new ActionListener(){
+        	boolean check = false;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(check){
+					createSchema.setEnabled(false);
+					destroySchema.setEnabled(false);
+					loadData.setEnabled(false);
+					clearAllData.setEnabled(false);
+					check = false;
+					advanced.setText("Enable Database Operations");
+				} else {
+					int i = JOptionPane.showConfirmDialog(frame, "Are you sure you want to continue?\n\n"
+							+ "If you are not aware of what you are doing, "
+							+ "this can be very harmful to the data stored in the Database\n"
+							+ "and cause errors in this program!","Warning",JOptionPane.YES_NO_OPTION);
+					if(i==0){
+						createSchema.setEnabled(true);
+						destroySchema.setEnabled(true);
+						loadData.setEnabled(true);
+						clearAllData.setEnabled(true);
+						check = true;
+						advanced.setText("Disable Database Operations");
+					}
+				}
+			}
+        });
+        databaseMenu.addSeparator();
+        
+        createSchema = new JMenuItem("Build schema");
+        databaseMenu.add(createSchema);
+        createSchema.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				db.createSchema();
+			}
+        });
+        createSchema.setEnabled(false);
+        
+        destroySchema = new JMenuItem("Destroy schema");
+        databaseMenu.add(destroySchema);
+        destroySchema.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				db.deleteSchema();
+			}
+        });
+        destroySchema.setEnabled(false);
+        
+        loadData = new JMenuItem("Load fake data");
+        databaseMenu.add(loadData);
+        loadData.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				db.loadMockData();;
+			}
+        });
+        loadData.setEnabled(false);
+        
+        
+        clearAllData = new JMenuItem("Clear all data");
+        databaseMenu.add(clearAllData);
+        clearAllData.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				db.clearAllData();
+			}
+        });
+        clearAllData.setEnabled(false);
+        
+        /////////MAIN
+        modify = new JMenuItem("Delete/Modify");
+        mainMenu.add(modify);
+        modify.addActionListener(listen);
 
         frame = new MyFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -189,32 +335,56 @@ public class Tester2 {
         			tables.get("titles").show();
         		}
             }
-        	if (delete.isArmed()) {
+        	if (modify.isArmed()) {
         		desktopFrame.add(new Modify(schema,db));
-        		String s = (String)JOptionPane.showInputDialog(
-                        frame,
-                        "Select the table:",
-                        "Table selector",
-                        JOptionPane.PLAIN_MESSAGE,
-                        null,
-                        schema.keySet().toArray(),
-                        null);
-
-        		//If a string was returned, say so.  db.getAsString(schema.get(s), s).toArray()
-        		if ((s != null) && (s.length() > 0)) {
-        			String q = (String)JOptionPane.showInputDialog(
-                            frame,
-                            "Select the relation:",
-                            "Relation selector",
-                            JOptionPane.PLAIN_MESSAGE,
-                            null,
-                            db.getAsString(schema.get(s), s).toArray(),
-                            null);
-        			if ((q != null) && (q.length() > 0)) {
-            			desktopFrame.add(new ModifyOrDelete(s,schema.get(s),q,db));
-            		}
-        		}
             }
         }
+    }
+    
+    private static class MyFrame extends JFrame {
+    	public MyFrame() {
+    		super();
+            addWindowListener(new java.awt.event.WindowAdapter() {
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                	close(); //Close connection when exiting!
+                    System.exit(0);
+                }
+            });
+        }
+    }
+
+    private static ArrayList<String> login(JFrame frame) {
+    	ArrayList<String> logininformation = new ArrayList<String>();
+
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
+
+        JPanel label = new JPanel(new GridLayout(4, 1, 2, 2));
+        label.add(new JLabel("Database Address", SwingConstants.RIGHT));
+        label.add(new JLabel("Database name", SwingConstants.RIGHT));
+        label.add(new JLabel("Username", SwingConstants.RIGHT));
+        label.add(new JLabel("Password", SwingConstants.RIGHT));
+        panel.add(label, BorderLayout.WEST);
+
+        JPanel controls = new JPanel(new GridLayout(4, 1, 2, 2));
+        JTextField url = new JTextField("172.16.9.182");
+        controls.add(url);
+        JTextField dbname = new JTextField("db");
+        controls.add(dbname);
+        JTextField username = new JTextField("sacdallago");
+        controls.add(username);
+        JPasswordField password = new JPasswordField("ciaociao3");
+        controls.add(password);
+        controls.setPreferredSize(new Dimension(200, 100));
+        panel.add(controls, BorderLayout.CENTER);
+
+        if(JOptionPane.showConfirmDialog(frame, panel, "Login", JOptionPane.OK_CANCEL_OPTION) != 0){
+        	System.exit(0);
+        }
+
+        logininformation.add(url.getText());
+        logininformation.add(dbname.getText());
+        logininformation.add(username.getText());
+        logininformation.add(new String(password.getPassword()));
+        return logininformation;
     }
 }

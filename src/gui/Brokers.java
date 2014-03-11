@@ -32,7 +32,8 @@ public class Brokers extends JInternalFrame {
 		add(panel);
 	}
 
-	private void refresh() {
+	public void refresh() {
+		con.setBrokers();
 		Object[][] data = new Object[con.getBrokers().size()][3];
 		for (int i = 0; i < con.getBrokers().size(); i++) {
 			data[i][0] = con.getBrokers().get(i).getBroker_number();
@@ -59,6 +60,7 @@ public class Brokers extends JInternalFrame {
 				column.setPreferredWidth(50);
 			}
 		}
+		panel.removeAll();
 		panel.add(scrollPane);
 		panel.updateUI();
 	}

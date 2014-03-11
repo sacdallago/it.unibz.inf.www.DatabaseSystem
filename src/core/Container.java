@@ -11,16 +11,20 @@ public class Container {
 	private ArrayList<StockValue> stockValues;
 	private ArrayList<Title> titles;
 	
+	private Database db;
+	
 	public Container(Database db){
-		setBankAccounts(db);
-		setBrokers(db);
-		setCompanies(db);
-		setStockValues(db);
-		setTitles(db);
+		this.db = db;
 	}
 	
-	private Container(){
-		
+	private Container(){}
+	
+	public void initialize(){
+		setBankAccounts();
+		setBrokers();
+		setCompanies();
+		setStockValues();
+		setTitles();
 	}
 	
 	public final ArrayList<BankAccount> getBankAccounts() {
@@ -40,30 +44,62 @@ public class Container {
 	}
 	
 	
-	public void setBankAccounts(Database db) {
+	public void setBankAccounts() {
 		this.bankAccounts = db.loadBankAccounts();
 	}
-	public void setBrokers(Database db) {
+	public void setBrokers() {
 		this.brokers = db.loadBrokers();
 	}
-	public void setCompanies(Database db) {
+	public void setCompanies() {
 		this.companies = db.loadCompanies();
 	}
-	public void setStockValues(Database db) {
+	public void setStockValues() {
 		this.stockValues = db.loadStockValues();
 	}
-	public void setTitles(Database db) {
+	public void setTitles() {
 		this.titles = db.loadTitles();
 	}
 	
-	public void setAll(Database db) {
-		setBankAccounts(db);
-		setBrokers(db);
-		setCompanies(db);
-		setStockValues(db);
-		setTitles(db);
+	public String printAndUpdateBankAccounts() {
+		setBankAccounts();
+		String result = "";
+		for (BankAccount a : bankAccounts){
+			result += a.toString() +"\n";
+		}
+		return result;
 	}
-	
+	public String printAndUpdateBrokers() {
+		setBrokers();
+		String result = "";
+		for (Broker a : brokers){
+			result += a.toString() +"\n";
+		}
+		return result;
+	}
+	public String printAndUpdateCompanies() {
+		setCompanies();
+		String result = "";
+		for (Company a : companies){
+			result += a.toString() +"\n";
+		}
+		return result;
+	}
+	public String printAndUpdateStockValues() {
+		setStockValues();
+		String result = "";
+		for (StockValue a : stockValues){
+			result += a.toString() +"\n";
+		}
+		return result;
+	}
+	public String printAndUpdateTitles() {
+		setTitles();
+		String result = "";
+		for (Title a : titles){
+			result += a.toString() +"\n";
+		}
+		return result;
+	}
 	
 	public String printBankAccounts() {
 		String result = "";

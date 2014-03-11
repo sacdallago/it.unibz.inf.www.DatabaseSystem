@@ -34,7 +34,8 @@ public class Companies extends JInternalFrame {
 		add(panel);
 	}
 
-	private void refresh() {
+	public void refresh() {
+		con.setCompanies();
 		Object[][] data = new Object[con.getCompanies().size()][5];
 		for (int i = 0; i < con.getCompanies().size(); i++) {
 			data[i][0] = con.getCompanies().get(i).getMarket_code();
@@ -54,7 +55,7 @@ public class Companies extends JInternalFrame {
 		scrollPane.setPreferredSize(new Dimension(720, 200));
 		table.setFillsViewportHeight(true);
 		// table.setBounds(10, 10, 600, 600);
-		
+		panel.removeAll();
 		panel.add(scrollPane);
 		panel.updateUI();
 	}

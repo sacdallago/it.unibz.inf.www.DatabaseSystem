@@ -34,7 +34,8 @@ public class StockValues extends JInternalFrame {
 		add(panel);
 	}
 
-	private void refresh() {
+	public void refresh() {
+		con.setStockValues();
 		Object[][] data = new Object[con.getStockValues().size()][5];
 		for (int i = 0; i < con.getStockValues().size(); i++) {
 			data[i][0] = con.getStockValues().get(i).getTime();
@@ -55,6 +56,7 @@ public class StockValues extends JInternalFrame {
 		table.setFillsViewportHeight(true);
 		// table.setBounds(10, 10, 600, 600);
 		
+		panel.removeAll();
 		panel.add(scrollPane);
 		panel.updateUI();
 	}

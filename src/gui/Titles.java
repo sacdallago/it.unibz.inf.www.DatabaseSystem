@@ -37,7 +37,8 @@ public class Titles extends JInternalFrame {
 		add(panel);
 	}
 
-	private void refresh() {
+	public void refresh() {
+		con.setTitles();
 		Object[][] data = new Object[con.getTitles().size()][8];
 		for (int i = 0; i < con.getTitles().size(); i++) {
 			data[i][0] = con.getTitles().get(i).getTitle_number();
@@ -60,6 +61,7 @@ public class Titles extends JInternalFrame {
 		scrollPane.setPreferredSize(new Dimension(720, 200));
 		table.setFillsViewportHeight(true);
 		// table.setBounds(10, 10, 600, 600);
+		panel.removeAll();
 		panel.add(scrollPane);
 		panel.updateUI();
 	}

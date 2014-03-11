@@ -68,11 +68,45 @@ public class Database {
 			for (int i=0;i<entries;i++){
 				int j = 0;
 				for (String a : query.keySet()){
-					result[i][j] = query.get(a);
+					result[i][j] = query.get(a).get(i);
 					j++;
 				}
 			}
 			return result;
+		}
+		
+		/**
+		 * Method to DELETE FROM a certain columns RELATION, WHERE there are constrains.
+		 * 
+		 * @param relation Is the name of the table where the deletion applies, such as "company"
+		 * @param constrains Represent constrains in pure sql. eg.: "type='checking'","market_code='RBS.L'","relation_number=12345"
+		 */
+		public boolean delete(String relation, String...constrains){
+			if(constrains.length == 0){
+				return false;
+			}
+			int itWorked = 0;
+			Statement statement = null;
+			String where = whereCreator(constrains);
+			try {
+				statement = db.createStatement();
+				String query = "DELETE FROM "+relation+" "+ where +";";
+				System.out.println(query);
+				itWorked = statement.executeUpdate(query);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+			if (itWorked == 1){
+				return true;
+			} else {
+				return false;
+			}
 		}
 		
 		/**
@@ -442,7 +476,22 @@ public class Database {
 			return tables;
 		}
 		
-		public void cleanDB(){
+		public void clearAllData(){
+			SqlLoad runner = new SqlLoad(db, false, true);
+			try {
+				runner.runScript(new BufferedReader(new FileReader("sql/clear.sql")));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				System.err.println("Some SQL file was not found!");
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.err.println("Some SQL file was not found!");
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void deleteSchema(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
 				runner.runScript(new BufferedReader(new FileReader("sql/clean.sql")));
@@ -457,7 +506,7 @@ public class Database {
 			}
 		}
 		
-		public void loadFakeData(){
+		public void loadMockData(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
 				runner.runScript(new BufferedReader(new FileReader("sql/load.sql")));
@@ -472,7 +521,7 @@ public class Database {
 			}
 		}
 		
-		public void createDBStructure(){
+		public void createSchema(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
 				runner.runScript(new BufferedReader(new FileReader("sql/create.sql")));
