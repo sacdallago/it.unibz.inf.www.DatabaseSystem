@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -479,7 +480,7 @@ public class Database {
 		public void clearAllData(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
-				runner.runScript(new BufferedReader(new FileReader("sql/clear.sql")));
+				runner.runScript(new BufferedReader(new InputStreamReader(ClassLoader.class.getResourceAsStream("clear.sql"))));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
@@ -494,7 +495,8 @@ public class Database {
 		public void deleteSchema(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
-				runner.runScript(new BufferedReader(new FileReader("sql/clean.sql")));
+				
+				runner.runScript(new BufferedReader(new InputStreamReader(ClassLoader.class.getResourceAsStream("clean.sql"), "UTF-8")));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
@@ -509,7 +511,7 @@ public class Database {
 		public void loadMockData(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
-				runner.runScript(new BufferedReader(new FileReader("sql/load.sql")));
+				runner.runScript(new BufferedReader(new FileReader("load.sql")));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
@@ -524,7 +526,7 @@ public class Database {
 		public void createSchema(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
-				runner.runScript(new BufferedReader(new FileReader("sql/create.sql")));
+				runner.runScript(new BufferedReader(new FileReader("create.sql")));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
