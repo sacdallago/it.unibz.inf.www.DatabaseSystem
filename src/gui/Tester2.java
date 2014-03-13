@@ -27,6 +27,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import utilities.Timer;
 import core.Container;
@@ -36,7 +37,7 @@ public class Tester2 {
 	private static JMenuItem accountTable, brokerTable, companyTable, stockTable, titleTable;
 	private static JMenuItem newAccount, newBroker, newCompany, newStock, newTitle;
 	private static JMenuItem createSchema, destroySchema, clearAllData, loadData;
-	private static JMenuItem modify;
+	private static JMenuItem modify, delete;
     private static MyFrame frame;
     private static JDesktopPane desktopFrame;
     private static Database db;
@@ -46,7 +47,8 @@ public class Tester2 {
     private static HashMap<String, JInternalFrame> tables = new HashMap<String, JInternalFrame>();
 
     public static void main(String[] args) {
-    	ArrayList<String> loginInfo = login(frame);
+    	final ArrayList<String> loginInfo = login(frame);
+    	
         db = new Database(loginInfo.get(0), loginInfo.get(1), loginInfo.get(2), loginInfo.get(3));
         con = new Container(db);
         
@@ -264,9 +266,13 @@ public class Tester2 {
         clearAllData.setEnabled(false);
         
         /////////MAIN
-        modify = new JMenuItem("Delete/Modify");
+        modify = new JMenuItem("Modify");
         mainMenu.add(modify);
         modify.addActionListener(listen);
+        
+        delete = new JMenuItem("Delete");
+        mainMenu.add(delete);
+        delete.addActionListener(listen);
 
         frame = new MyFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -337,6 +343,9 @@ public class Tester2 {
             }
         	if (modify.isArmed()) {
         		desktopFrame.add(new Modify(schema,db));
+            }
+        	if (delete.isArmed()) {
+        		desktopFrame.add(new Delete(schema,db));
             }
         }
     }

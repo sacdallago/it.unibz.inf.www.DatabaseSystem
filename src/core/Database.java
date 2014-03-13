@@ -480,7 +480,7 @@ public class Database {
 		public void clearAllData(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
-				runner.runScript(new BufferedReader(new InputStreamReader(ClassLoader.class.getResourceAsStream("clear.sql"))));
+				runner.runScript(new BufferedReader(new FileReader("sql/clear.sql")));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
@@ -496,7 +496,7 @@ public class Database {
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
 				
-				runner.runScript(new BufferedReader(new InputStreamReader(ClassLoader.class.getResourceAsStream("clean.sql"), "UTF-8")));
+				runner.runScript(new BufferedReader(new FileReader("sql/clean.sql")));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
@@ -511,7 +511,7 @@ public class Database {
 		public void loadMockData(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
-				runner.runScript(new BufferedReader(new FileReader("load.sql")));
+				runner.runScript(new BufferedReader(new FileReader("sql/load.sql")));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
@@ -526,7 +526,7 @@ public class Database {
 		public void createSchema(){
 			SqlLoad runner = new SqlLoad(db, false, true);
 			try {
-				runner.runScript(new BufferedReader(new FileReader("create.sql")));
+				runner.runScript(new BufferedReader(new FileReader("sql/create.sql")));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.err.println("Some SQL file was not found!");
