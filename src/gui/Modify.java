@@ -5,12 +5,16 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -19,194 +23,110 @@ import javax.swing.JTable;
 import core.Database;
 
 public class Modify extends JInternalFrame {
-	private JPanel upperPanel, middlePanel, bottomPanel;
-	private JComboBox one, two;
-	private JTable t;
+	private JPanel upperPanel, comboBoxPanel;
+	
+	private JComboBox relation;
+	private JComboBox[] constrains;
+	
 	private Database db;
-	private JButton delete, modify;
-	private String[] where;
-	private String order;
+	private JButton delete;
+	private ArrayList<String> where;
+	private String[] columns;
 
-	public Modify(HashMap<String, String> schema, Database db) {
-		super("Modify or Delete", false, // resizable
+	public Modify(HashMap<String, String> schema, final Database db) {
+		super("Delete", false, // resizable
 				true, // closable
 				false, // maximizable
 				true);// iconifiable
 		setVisible(true);
 		this.db = db;
 		// ///////////////////////////////////////////////TOP
-		final Database inner = db;
-		final HashMap<String, String> innerMap = schema;
-
-		one = new JComboBox(schema.keySet().toArray());
-		two = new JComboBox();
-
-		upperPanel = new JPanel();
-		upperPanel.setLayout(new GridLayout(0, 4));
-		upperPanel.add(one);
-		upperPanel.add(two);
-
-		one.addActionListener(new ActionListener() {
+		relation = new JComboBox(schema.keySet().toArray());
+		final OptionListener optionListener = new OptionListener();
+		relation.addActionListener(new ActionListener(){
+			@Override
 			public void actionPerformed(ActionEvent e) {
-				final HashMap<String, ArrayList<String>> query = inner.get(
-						innerMap.get(one.getSelectedItem().toString()), one
-								.getSelectedItem().toString());
-				two = new JComboBox(inner.getAsString(query).toArray());
-				two.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						
-						order = "";
-						for (String a : query.keySet()) {
-							order += a + ",";
-						}
-						order = order.substring(0, order.length() - 1);
-						
-						refresh(one.getSelectedItem().toString(), order, two.getSelectedItem().toString());
-						delete.setEnabled(true);
-						modify.setEnabled(true);
-						bottomPanel.updateUI();
-					}
-				});
-				upperPanel.remove(1);
-				upperPanel.add(two);
-				upperPanel.updateUI();
-				delete.setEnabled(false);
-				modify.setEnabled(false);
-				bottomPanel.updateUI();
+				where = new ArrayList<String>();
+				comboBoxPanel.removeAll();
+				HashMap<String, ArrayList<String>> query = db.get("*", relation.getSelectedItem().toString());
+				columns = query.keySet().toArray(new String[0]);
+				constrains = new JComboBox[columns.length];
+				comboBoxPanel.setLayout(new GridLayout(1,columns.length));
+				
+				int i = 0;
+				for(String column : columns){
+					ArrayList<String> list = query.get(column);
+					list.add("ALL");
+					Collections.reverse(list);
+					constrains[i] = new JComboBox(new LinkedHashSet(list).toArray());
+					constrains[i].setSelectedItem("ALL");
+					constrains[i].addActionListener(optionListener);
+					comboBoxPanel.add(constrains[i]);
+					i++;
+				}
+
+				comboBoxPanel.updateUI();
+				if(!delete.isEnabled()) delete.setEnabled(true);
 			}
 		});
+		
+		delete = new JButton("Delete");
+		delete.setEnabled(false);
+		delete.addActionListener(new ButtonListener());
+
+		upperPanel = new JPanel();
+		upperPanel.setLayout(new BoxLayout(upperPanel, BoxLayout.X_AXIS));
+		upperPanel.add(relation);
+		upperPanel.add(delete);
 		// ///////////////////////////////////////////////TOP
 		// ///////////////////////////////////////////////MIDDLE
-		middlePanel = new JPanel();
-		t = new JTable();
-
-		JScrollPane scrollPane = new JScrollPane(t);
-		scrollPane.setPreferredSize(new Dimension(720, 50));
-		t.setFillsViewportHeight(true);
-		middlePanel.add(scrollPane);
-		middlePanel.setSize(getSize());
+		comboBoxPanel = new JPanel();
+		comboBoxPanel.setPreferredSize(new Dimension(720, 50));
 		// ///////////////////////////////////////////////MIDDLE
-		// ///////////////////////////////////////////////BOTTOM
-		bottomPanel = new JPanel();
-		delete = new JButton("Delete");
-		modify = new JButton("Modify");
-		Listener listen = new Listener();
-		delete.setEnabled(false);
-		modify.setEnabled(false);
-		delete.addActionListener(listen);
-		modify.addActionListener(listen);
-		bottomPanel.add(delete);
-		bottomPanel.add(modify);
-		// ///////////////////////////////////////////////BOTTOM
 
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
-		setBounds(0, 0, 800, 200);
+		setBounds(0, 0, 780, 300);
 		add(upperPanel);
-		add(middlePanel);
-		add(bottomPanel);
+		add(comboBoxPanel);
 	}
 	
 	private void reset(){
-		
-		two = new JComboBox();
-		upperPanel.remove(1);
-		upperPanel.add(two);
-		
-		t = new JTable();
-		JScrollPane scrollPane = new JScrollPane(t);
-		scrollPane.setPreferredSize(new Dimension(720, 50));
-		t.setFillsViewportHeight(true);
-		middlePanel.remove(0);
-		middlePanel.add(scrollPane);
-		
-		delete.setEnabled(false);
-		modify.setEnabled(false);
-		
-		upperPanel.updateUI();
-		middlePanel.updateUI();
-		bottomPanel.updateUI();
-	}
-
-	private void refresh(String table, String attributes, String values) {
-		attributes = attributes.replaceAll(" ", "");
-		String[] columns = attributes.split(",");
-		values = values.replaceAll(" ", "");
-		String[] condition = values.split(",");
-		where = new String[condition.length];
-		if (condition.length != columns.length) {
-			JOptionPane.showMessageDialog(null, "Damn, something went wrong!");
-			return;
-		}
-		for (int i = 0; i < condition.length; i++) {
-			where[i] = columns[i] + "='" + condition[i] + "'";
-		}
-
-		HashMap<String, ArrayList<String>> query = db.get("*", table, where);
-
-		t = new JTable(db.convert(query), query.keySet().toArray()) {
-			public boolean isCellEditable(int row, int column) {
-				return false;
-			}
-		};
-
-		JScrollPane scrollPane = new JScrollPane(t);
-		scrollPane.setPreferredSize(new Dimension(720, 50));
-		t.setFillsViewportHeight(true);
-
-		middlePanel.remove(0);
-		middlePanel.add(scrollPane);
-
-		middlePanel.updateUI();
+		this.dispose();
 	}
 	
-	private void refreshToModify(String table, String attributes, String values) {
-		attributes = attributes.replaceAll(" ", "");
-		String[] columns = attributes.split(",");
-		values = values.replaceAll(" ", "");
-		String[] condition = values.split(",");
-		where = new String[condition.length];
-		if (condition.length != columns.length) {
-			JOptionPane.showMessageDialog(null, "Damn, something went wrong!");
-			return;
-		}
-		for (int i = 0; i < condition.length; i++) {
-			where[i] = columns[i] + "='" + condition[i] + "'";
-		}
-
-		HashMap<String, ArrayList<String>> query = db.get("*", table, where);
-
-		t = new JTable(db.convert(query), query.keySet().toArray());
-
-		JScrollPane scrollPane = new JScrollPane(t);
-		scrollPane.setPreferredSize(new Dimension(720, 50));
-		t.setFillsViewportHeight(true);
-
-		middlePanel.remove(0);
-		middlePanel.add(scrollPane);
-
-		middlePanel.updateUI();
-	}
-	
-	private class Listener implements ActionListener{
+	private class ButtonListener implements ActionListener{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if(delete == (JButton) e.getSource()){
-				int confirm = JOptionPane.showOptionDialog(null,"Are you sure you want to delete this entry?","Confirmation",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,null,null,null);
+				int confirm = JOptionPane.showOptionDialog(null,"Are you sure you want to delete this/these entry/ies?","Confirmation",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,null,null,null);
 				if(confirm == 0){
-					if(db.delete(one.getSelectedItem().toString(), where)){
-						System.out.println("Successfully deleted from "+ one.getSelectedItem().toString());
+					int result = db.delete(relation.getSelectedItem().toString(), where.toArray(new String[0]));
+					if(result > 0){
+						JOptionPane.showMessageDialog(getContentPane(), "Successfully deleted "+ result+" entries from "+ relation.getSelectedItem().toString());
 						reset();
-					} else {
+					} else if (result == 0){
 						JOptionPane.showMessageDialog(null, "Not deleted! Error occurred!","WARNING", JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						JOptionPane.showMessageDialog(null, "Nothing to delete","WARNING", JOptionPane.INFORMATION_MESSAGE);
 					}
 				} else {
 					
 				}
 			}
-			if(modify == (JButton) e.getSource()){
-				refreshToModify(one.getSelectedItem().toString(), order, two.getSelectedItem().toString());
+		
+	}
+	private class OptionListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			where = new ArrayList<String>();
+			for(int i=0; i<constrains.length; i++){
+				if(!constrains[i].getSelectedItem().toString().equals("ALL")){
+					where.add(columns[i]+"='"+constrains[i].getSelectedItem().toString()+"'");
+				}
+				
 			}
+			HashMap<String, ArrayList<String>> query = db.get("*", relation.getSelectedItem().toString(),where.toArray(new String[0]));
 		}
 		
 	}

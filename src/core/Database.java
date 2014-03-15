@@ -82,11 +82,8 @@ public class Database {
 		 * @param relation Is the name of the table where the deletion applies, such as "company"
 		 * @param constrains Represent constrains in pure sql. eg.: "type='checking'","market_code='RBS.L'","relation_number=12345"
 		 */
-		public boolean delete(String relation, String...constrains){
-			if(constrains.length == 0){
-				return false;
-			}
-			int itWorked = 0;
+		public int delete(String relation, String...constrains){
+			int itWorked = -1;
 			Statement statement = null;
 			String where = whereCreator(constrains);
 			try {
@@ -103,11 +100,7 @@ public class Database {
 			        } catch (SQLException e) { /* ignored */}
 			    }
 			}
-			if (itWorked == 1){
-				return true;
-			} else {
-				return false;
-			}
+			return itWorked;
 		}
 		
 		/**
