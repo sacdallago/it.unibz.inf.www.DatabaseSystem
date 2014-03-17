@@ -104,6 +104,34 @@ public class Database {
 		}
 		
 		/**
+		 * Method to DELETE FROM a certain columns RELATION, WHERE there are constrains.
+		 * 
+		 * @param relation Is the name of the table where the deletion applies, such as "company"
+		 * @param constrains[] Represent constrains in pure sql. eg.: "type='checking'","market_code='RBS.L'","relation_number=12345"
+		 * @param modifications Represent the fields to be modified in pure sql. eg.: "type='checking'","market_code='RBS.L'","relation_number=12345"
+		 */
+		public int modify(String relation, String[] constrains, String...modifications){
+			int itWorked = -1;
+			Statement statement = null;
+			String where = whereCreator(constrains);
+			try {
+				statement = db.createStatement();
+				String query = "UPDATE "+relation+" "+ where +";";
+				System.out.println(query);
+				itWorked = statement.executeUpdate(query);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+			return itWorked;
+		}
+		
+		/**
 		 * Method to SELECT certain columns from a RELATION, WHERE there are constrains.
 		 * 
 		 * @param select Should be something like "number,id,name" mind dividing the columns by comma only!

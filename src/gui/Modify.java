@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -19,17 +20,22 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.border.LineBorder;
 
 import core.Database;
 
 public class Modify extends JInternalFrame {
-	private JPanel upperPanel, comboBoxPanel;
+	private JPanel upperPanel, tablePanel, comboBoxPanel, labelPanel, textFieldPanel;
 	
 	private JComboBox relation;
-	private JComboBox[] constrains;
 	
+	private JComboBox[] constrains;
+	private JTextField[] modifications;
+	
+	private JTable matchTable;
 	private Database db;
-	private JButton delete;
+	private JButton delete, modify;
 	private ArrayList<String> where;
 	private String[] columns;
 
@@ -48,10 +54,26 @@ public class Modify extends JInternalFrame {
 			public void actionPerformed(ActionEvent e) {
 				where = new ArrayList<String>();
 				comboBoxPanel.removeAll();
+				labelPanel.removeAll();
+				textFieldPanel.removeAll();
 				HashMap<String, ArrayList<String>> query = db.get("*", relation.getSelectedItem().toString());
 				columns = query.keySet().toArray(new String[0]);
 				constrains = new JComboBox[columns.length];
+				JLabel[] labels = new JLabel[columns.length];
+				modifications = new JTextField[columns.length];
 				comboBoxPanel.setLayout(new GridLayout(1,columns.length));
+				labelPanel.setLayout(new GridLayout(1,columns.length));
+				textFieldPanel.setLayout(new GridLayout(1,columns.length));
+				
+				matchTable = new JTable(db.convert(query), query.keySet().toArray()) {
+					public boolean isCellEditable(int row, int column) {
+						return false;
+					}
+				};
+				JScrollPane scrollPane = new JScrollPane(matchTable);
+				scrollPane.setPreferredSize(new Dimension(720, 170));
+				matchTable.setFillsViewportHeight(true);
+				
 				
 				int i = 0;
 				for(String column : columns){
@@ -61,33 +83,79 @@ public class Modify extends JInternalFrame {
 					constrains[i] = new JComboBox(new LinkedHashSet(list).toArray());
 					constrains[i].setSelectedItem("ALL");
 					constrains[i].addActionListener(optionListener);
+					labels[i] = new JLabel("Set "+columns[i]+":");
+					modifications[i] = new JTextField();
 					comboBoxPanel.add(constrains[i]);
+					labelPanel.add(labels[i]);
+					textFieldPanel.add(modifications[i]);
 					i++;
 				}
 
+				tablePanel.removeAll();
+				tablePanel.add(scrollPane);
+
 				comboBoxPanel.updateUI();
+				labelPanel.updateUI();
+				textFieldPanel.updateUI();
+				tablePanel.updateUI();
 				if(!delete.isEnabled()) delete.setEnabled(true);
+				if(!modify.isEnabled()) modify.setEnabled(true);
 			}
 		});
 		
 		delete = new JButton("Delete");
+		delete.setBackground(Color.RED);
+		delete.setOpaque(true);
+		delete.setBorderPainted(false);
 		delete.setEnabled(false);
 		delete.addActionListener(new ButtonListener());
+		
+		modify = new JButton("Modify");
+		modify.setBackground(Color.YELLOW);
+		modify.setOpaque(true);
+		modify.setBorderPainted(false);
+		modify.setEnabled(false);
+		modify.addActionListener(new ButtonListener());
 
 		upperPanel = new JPanel();
 		upperPanel.setLayout(new BoxLayout(upperPanel, BoxLayout.X_AXIS));
+		upperPanel.add(new JLabel("Select the relation: "));
 		upperPanel.add(relation);
 		upperPanel.add(delete);
+		upperPanel.add(modify);
 		// ///////////////////////////////////////////////TOP
 		// ///////////////////////////////////////////////MIDDLE
+		tablePanel = new JPanel();
+		matchTable = new JTable();
 		comboBoxPanel = new JPanel();
+		labelPanel = new JPanel();
+		textFieldPanel = new JPanel();
+		//comboBoxPanel.add(new JComboBox());
+
+		JScrollPane scrollPane = new JScrollPane(matchTable);
+		scrollPane.setPreferredSize(new Dimension(720, 170));
+		matchTable.setFillsViewportHeight(true);
 		comboBoxPanel.setPreferredSize(new Dimension(720, 50));
+		labelPanel.setPreferredSize(new Dimension(720, 20));
+		textFieldPanel.setPreferredSize(new Dimension(720, 20));
+		tablePanel.add(scrollPane);
+		//middlePanel.setSize(getSize());
+		tablePanel.setPreferredSize(new Dimension(720, 220));
 		// ///////////////////////////////////////////////MIDDLE
 
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
-		setBounds(0, 0, 780, 300);
-		add(upperPanel);
-		add(comboBoxPanel);
+		setBounds(0, 0, 780, 440);
+		JPanel container = new JPanel();
+		container.setPreferredSize(new Dimension(720, 20));
+		container.add(upperPanel);
+		add(container);
+		add(tablePanel);
+		JPanel lower = new JPanel();
+		lower.setPreferredSize(new Dimension(720, 90));
+		lower.add(comboBoxPanel);
+		lower.add(labelPanel);
+		lower.add(textFieldPanel);
+		add(lower);
 	}
 	
 	private void reset(){
@@ -98,21 +166,48 @@ public class Modify extends JInternalFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-				int confirm = JOptionPane.showOptionDialog(null,"Are you sure you want to delete this/these entry/ies?","Confirmation",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,null,null,null);
-				if(confirm == 0){
-					int result = db.delete(relation.getSelectedItem().toString(), where.toArray(new String[0]));
-					if(result > 0){
-						JOptionPane.showMessageDialog(getContentPane(), "Successfully deleted "+ result+" entries from "+ relation.getSelectedItem().toString());
+			if ((JButton) e.getSource() == delete) {
+				int confirm = JOptionPane
+						.showOptionDialog(
+								null,
+								"Are you sure you want to delete this/these entry/ies?",
+								"Confirmation", JOptionPane.YES_NO_OPTION,
+								JOptionPane.QUESTION_MESSAGE, null, null, null);
+				if (confirm == 0) {
+					int result = db.delete(relation.getSelectedItem()
+							.toString(), where.toArray(new String[0]));
+					if (result > 0) {
+						JOptionPane
+								.showMessageDialog(getContentPane(),
+										"Successfully deleted "
+												+ result
+												+ " entries from "
+												+ relation.getSelectedItem()
+														.toString());
 						reset();
-					} else if (result == 0){
-						JOptionPane.showMessageDialog(null, "Not deleted! Error occurred!","WARNING", JOptionPane.INFORMATION_MESSAGE);
+					} else if (result == 0) {
+						JOptionPane.showMessageDialog(null,
+								"Not deleted! Error occurred!", "WARNING",
+								JOptionPane.INFORMATION_MESSAGE);
 					} else {
-						JOptionPane.showMessageDialog(null, "Nothing to delete","WARNING", JOptionPane.INFORMATION_MESSAGE);
+						JOptionPane.showMessageDialog(null,
+								"Nothing to delete", "WARNING",
+								JOptionPane.INFORMATION_MESSAGE);
 					}
 				} else {
-					
+					//Not confirmed delete, do nothing!
 				}
+			} else if((JButton)e.getSource() == modify){
+				for(int i =0;i<modifications.length;i++){
+					String text = modifications[i].getText().replaceAll("[ |'|\"|AND|OR|==|=|!=]", "");
+					if(!text.equals("")){
+						System.out.println(text);
+					}
+				}
+			} else {
+				//Save has been pressed
 			}
+		}
 		
 	}
 	private class OptionListener implements ActionListener{
@@ -127,6 +222,19 @@ public class Modify extends JInternalFrame {
 				
 			}
 			HashMap<String, ArrayList<String>> query = db.get("*", relation.getSelectedItem().toString(),where.toArray(new String[0]));
+			
+			matchTable = new JTable(db.convert(query), query.keySet().toArray()) {
+				public boolean isCellEditable(int row, int column) {
+					return false;
+				}
+			};
+			JScrollPane scrollPane = new JScrollPane(matchTable);
+			scrollPane.setPreferredSize(new Dimension(720, 170));
+			matchTable.setFillsViewportHeight(true);
+
+			tablePanel.removeAll();
+			tablePanel.add(scrollPane);
+			tablePanel.updateUI();
 		}
 		
 	}
