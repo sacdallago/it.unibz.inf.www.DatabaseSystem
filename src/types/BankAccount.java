@@ -1,6 +1,6 @@
 package types;
 
-public class BankAccount {
+public class BankAccount implements DatabaseType  {
 	private Integer relation_number;
 	private String iban;
 	private String bic;
@@ -61,5 +61,11 @@ public class BankAccount {
 				+ balance + ", account_currency=" + account_currency
 				+ ", local_currency=" + local_currency + ", market_code="
 				+ market_code + "]";
+	}
+
+	@Override
+	public String convertToInsert() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

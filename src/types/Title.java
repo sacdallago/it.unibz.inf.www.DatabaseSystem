@@ -1,6 +1,6 @@
 package types;
 
-public class Title {
+public class Title implements DatabaseType  {
 	private Integer title_number;
 	private String market_code;
 	private String iban;
@@ -10,9 +10,7 @@ public class Title {
 	private Double initial_value;
 	private String initial_value_currency;
 	
-	public Title(Integer title_number, String market_code, String iban,
-			String bic, Integer broker_number, String created_day,
-			Double initial_value, String initial_value_currency) {
+	public Title(Integer title_number, String market_code, String iban,String bic, Integer broker_number, String created_day, Double initial_value, String initial_value_currency) {
 		this.title_number = title_number;
 		this.market_code = market_code;
 		this.iban = iban;
@@ -62,5 +60,11 @@ public class Title {
 				+ ", broker_number=" + broker_number + ", created_day="
 				+ created_day + ", initial_value=" + initial_value
 				+ ", initial_value_currency=" + initial_value_currency + "]";
+	}
+
+	@Override
+	public String convertToInsert() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

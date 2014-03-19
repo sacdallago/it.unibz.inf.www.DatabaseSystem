@@ -104,16 +104,10 @@ public class Modify extends JInternalFrame {
 		});
 		
 		delete = new JButton("Delete");
-		delete.setBackground(Color.RED);
-		delete.setOpaque(true);
-		delete.setBorderPainted(false);
 		delete.setEnabled(false);
 		delete.addActionListener(new ButtonListener());
 		
 		modify = new JButton("Modify");
-		modify.setBackground(Color.YELLOW);
-		modify.setOpaque(true);
-		modify.setBorderPainted(false);
 		modify.setEnabled(false);
 		modify.addActionListener(new ButtonListener());
 
@@ -198,13 +192,43 @@ public class Modify extends JInternalFrame {
 					//Not confirmed delete, do nothing!
 				}
 			} else if((JButton)e.getSource() == modify){
+				ArrayList<String> set = new ArrayList<String>();
 				for(int i =0;i<modifications.length;i++){
-					String text = modifications[i].getText().replaceAll("[ |'|\"|AND|OR|==|=|!=]", "");
+					String text = modifications[i].getText().replaceAll("[^a-zA-Z0-9/.-]|--", "");
+					//String text = modifications[i].getText();
 					if(!text.equals("")){
-						System.out.println(text);
+						set.add(columns[i]+" = '"+text+"'");
 					}
 				}
-			} else {
+				int result = db.modify(relation.getSelectedItem().toString(), where.toArray(new String[0]), set.toArray(new String[0]));
+				if (result > 0) {
+					JOptionPane
+							.showMessageDialog(getContentPane(),
+									"Successfully modified "
+											+ result
+											+ " entries from "
+											+ relation.getSelectedItem()
+													.toString());
+					reset();
+				} else if (result == 0) {
+					JOptionPane.showMessageDialog(null,
+							"Nothing modified! Error occurred!", "WARNING",
+							JOptionPane.INFORMATION_MESSAGE);
+				} else if (result == -2) {
+					JOptionPane.showMessageDialog(null,
+							"Nothing modified as no parameter was given!", "WARNING",
+							JOptionPane.INFORMATION_MESSAGE);
+				} else {
+					JOptionPane.showMessageDialog(null,
+							"An error occoured!\n\n"
+							+ "Please remember that only these types of values are admitted:\n"
+							+ "- Dates in the form 'YYYY-MM-DD'\n"
+							+ "- Integers in the form '123'\n"
+							+ "- Floating point values in the form '12.3'\n"
+							+ "- Alphanumerical literals in the form 'Abc12.3'\n\n"
+							+ "Also note that you cannot change key values for more than one entry!", "WARNING",
+							JOptionPane.ERROR_MESSAGE);
+				}
 				//Save has been pressed
 			}
 		}

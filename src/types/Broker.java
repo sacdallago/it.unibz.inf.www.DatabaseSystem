@@ -1,6 +1,6 @@
 package types;
 
-public class Broker {
+public class Broker implements DatabaseType  {
 	private Integer broker_number;
 	private Integer rating;
 	private String market_code;
@@ -27,5 +27,11 @@ public class Broker {
 	public String toString() {
 		return "Broker [broker_number=" + broker_number + ", rating=" + rating
 				+ ", market_code=" + market_code + "]";
+	}
+
+	@Override
+	public String convertToInsert() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

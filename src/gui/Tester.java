@@ -28,7 +28,7 @@ public class Tester {
 		System.setOut(out);
 		*/
 		
-		Database db = new Database("172.16.9.182", "db", "sacdallago", "ciaociao3");
+		//Database db = new Database("172.16.9.182", "db", "sacdallago", "ciaociao3");
 		
 		//db.cleanDB();
 		//db.createDBStructure();
@@ -44,6 +44,7 @@ public class Tester {
 		//System.out.println(db.getContainer().printStockValues());
 		//System.out.println(db.getContainer().printTitles());
 		
+		/*
 		HashMap<String, ArrayList<String>> query = db.get("time,title_number,market_code", "stock_value");
 		ArrayList<String> result = new ArrayList<String>();
 		boolean first = true;
@@ -62,8 +63,14 @@ public class Tester {
 		for(String a : result){
 			System.out.println(a);
 		}
+		*/
 		
-		db.close();
+		//db.close();
+		
+		//System.out.println("TESTtest123.tes t--comment".replaceAll("[^a-zA-Z0-9/.]|--", ""));
+		//System.out.println("2013-12-23".replaceAll("[^a-zA-Z0-9/.-]|--", ""));
+		
+		InsertPanels.insertBankAccount(null);
 	}
 
 }

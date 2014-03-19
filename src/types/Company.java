@@ -1,6 +1,6 @@
 package types;
 
-public class Company {
+public class Company implements DatabaseType {
 	private String market_code;
 	private String brand_name;
 	private Integer rating;
@@ -40,6 +40,12 @@ public class Company {
 		return "Company [market_code=" + market_code + ", brand_name="
 				+ brand_name + ", rating=" + rating + ", capital=" + capital
 				+ ", currency=" + currency + "]";
+	}
+
+	@Override
+	public String convertToInsert() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

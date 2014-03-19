@@ -347,6 +347,9 @@ public class Tester2 {
         	if (delete.isArmed()) {
         		desktopFrame.add(new Delete(schema,db));
             }
+        	if (newAccount.isArmed()) {
+        		InsertPanels.insertBankAccount(frame);
+            }
         }
     }
     

@@ -62,6 +62,20 @@ public class Database {
 			return result;
 		}
 		
+		private String setCreator(String conditions[]){
+			String result = "";
+			if(conditions.length == 0){
+				return result;
+			}
+			result += "SET " + conditions[0] + ", ";
+			if(conditions.length > 1){
+				for(int i = 1; i<conditions.length;i++){
+					result += conditions[i] + ", ";
+				}
+			}
+			return result.substring(0,result.length()-2);
+		}
+		
 		public Object[][] convert(HashMap<String,ArrayList<String>> query){
 			Object[][] result;
 			int entries = query.get(query.keySet().iterator().next()).size();
@@ -114,13 +128,17 @@ public class Database {
 			int itWorked = -1;
 			Statement statement = null;
 			String where = whereCreator(constrains);
+			String set = setCreator(modifications);
+			if(set.equals("")){
+				return -2;
+			}
 			try {
 				statement = db.createStatement();
-				String query = "UPDATE "+relation+" "+ where +";";
+				String query = "UPDATE " + relation + " " + set + " " + where + ";";
 				System.out.println(query);
 				itWorked = statement.executeUpdate(query);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 			} finally {
 			    if (statement != null) {
 			        try {

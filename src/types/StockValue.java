@@ -1,6 +1,6 @@
 package types;
 
-public class StockValue {
+public class StockValue implements DatabaseType  {
 	private String time;
 	private String market_code;
 	private Integer title_number;
@@ -40,5 +40,11 @@ public class StockValue {
 		return "StockValue [time=" + time + ", market_code=" + market_code
 				+ ", title_number=" + title_number + ", current_value="
 				+ current_value + ", currency=" + currency + "]";
+	}
+
+	@Override
+	public String convertToInsert() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
