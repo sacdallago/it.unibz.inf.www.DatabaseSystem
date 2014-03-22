@@ -1,6 +1,5 @@
 package gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -8,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.LinkedHashSet;
 
 import javax.swing.BoxLayout;
@@ -21,8 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.border.LineBorder;
-
 import core.Database;
 
 public class Modify extends JInternalFrame {
@@ -66,6 +62,7 @@ public class Modify extends JInternalFrame {
 				textFieldPanel.setLayout(new GridLayout(1,columns.length));
 				
 				matchTable = new JTable(db.convert(query), query.keySet().toArray()) {
+					@Override
 					public boolean isCellEditable(int row, int column) {
 						return false;
 					}
@@ -248,6 +245,7 @@ public class Modify extends JInternalFrame {
 			HashMap<String, ArrayList<String>> query = db.get("*", relation.getSelectedItem().toString(),where.toArray(new String[0]));
 			
 			matchTable = new JTable(db.convert(query), query.keySet().toArray()) {
+				@Override
 				public boolean isCellEditable(int row, int column) {
 					return false;
 				}

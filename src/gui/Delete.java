@@ -7,14 +7,12 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.LinkedHashSet;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JInternalFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -56,6 +54,7 @@ public class Delete extends JInternalFrame {
 				comboBoxPanel.setLayout(new GridLayout(1,columns.length));
 				
 				matchTable = new JTable(db.convert(query), query.keySet().toArray()) {
+					@Override
 					public boolean isCellEditable(int row, int column) {
 						return false;
 					}
@@ -156,6 +155,7 @@ public class Delete extends JInternalFrame {
 			HashMap<String, ArrayList<String>> query = db.get("*", relation.getSelectedItem().toString(),where.toArray(new String[0]));
 			
 			matchTable = new JTable(db.convert(query), query.keySet().toArray()) {
+				@Override
 				public boolean isCellEditable(int row, int column) {
 					return false;
 				}

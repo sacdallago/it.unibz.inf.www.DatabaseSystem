@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
@@ -48,7 +49,7 @@ public class TextPrompt extends JLabel
 		setFont( component.getFont() );
 		setForeground( component.getForeground() );
 		setBorder( new EmptyBorder(component.getInsets()) );
-		setHorizontalAlignment(JLabel.LEADING);
+		setHorizontalAlignment(SwingConstants.LEADING);
 
 		component.addFocusListener( this );
 		document.addDocumentListener( this );
@@ -194,11 +195,13 @@ public class TextPrompt extends JLabel
 
 //  Implement FocusListener
 
+	@Override
 	public void focusGained(FocusEvent e)
 	{
 		checkForPrompt();
 	}
 
+	@Override
 	public void focusLost(FocusEvent e)
 	{
 		focusLost++;
@@ -207,15 +210,18 @@ public class TextPrompt extends JLabel
 
 //  Implement DocumentListener
 
+	@Override
 	public void insertUpdate(DocumentEvent e)
 	{
 		checkForPrompt();
 	}
 
+	@Override
 	public void removeUpdate(DocumentEvent e)
 	{
 		checkForPrompt();
 	}
 
+	@Override
 	public void changedUpdate(DocumentEvent e) {}
 }

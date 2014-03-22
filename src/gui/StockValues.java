@@ -3,8 +3,6 @@ package gui;
 import java.awt.Dimension;
 
 import javax.swing.*;
-import javax.swing.table.TableColumn;
-
 import core.Container;
 
 public class StockValues extends JInternalFrame {
@@ -46,6 +44,7 @@ public class StockValues extends JInternalFrame {
 		}
 
 		JTable table = new JTable(data, columnNames) {
+			@Override
 			public boolean isCellEditable(int row, int column) {
 				return false;
 			}

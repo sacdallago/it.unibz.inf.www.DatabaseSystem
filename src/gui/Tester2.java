@@ -4,18 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-
-import javax.swing.JComboBox;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
@@ -28,8 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-
 import utilities.Timer;
 import core.Container;
 import core.Database;
@@ -128,6 +118,7 @@ public class Tester2 {
         	boolean autoRefreshCheck = false;
         	Thread autosync;
         	
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(autoRefreshCheck){
 					autosync.stop();
@@ -135,7 +126,8 @@ public class Tester2 {
 					autoRefreshCheck = false;
 				} else {
 					autosync = new Thread(){
-		            	public void run(){
+		            	@Override
+						public void run(){
 		            		while(true){
 		            			try {
 			    					Thread.sleep(30000);
@@ -161,6 +153,7 @@ public class Tester2 {
         tablesMenu.add(manualRefresh);
         manualRefresh.addActionListener(new ActionListener(){
         	
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				((BankAccounts) tables.get("accounts")).refresh();
 				((Brokers) tables.get("brokers")).refresh();
@@ -425,7 +418,8 @@ public class Tester2 {
     	public MyFrame() {
     		super();
             addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent e) {
+                @Override
+				public void windowClosing(java.awt.event.WindowEvent e) {
                 	close(); //Close connection when exiting!
                     System.exit(0);
                 }
