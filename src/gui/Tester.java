@@ -77,6 +77,8 @@ public class Tester {
 		//String iban = "1234-56-78";
 		//String iban = "1234-5-7";
 		//System.out.println((iban.length()>31) +" "+ iban.matches("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"));
+		//String text = "Facebook 21 Inc.";
+		//System.out.println(text.replaceAll("[^a-zA-Z/.-/ ]|-[-]+", "").replaceAll(" +", " "));
 	}
 
 }

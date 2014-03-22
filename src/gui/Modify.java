@@ -34,6 +34,8 @@ public class Modify extends JInternalFrame {
 	private JButton delete, modify;
 	private ArrayList<String> where;
 	private String[] columns;
+	
+	private OptionListener optionListener;
 
 	public Modify(HashMap<String, String> schema, final Database db) {
 		super("Delete", false, // resizable
@@ -44,7 +46,7 @@ public class Modify extends JInternalFrame {
 		this.db = db;
 		// ///////////////////////////////////////////////TOP
 		relation = new JComboBox(schema.keySet().toArray());
-		final OptionListener optionListener = new OptionListener();
+		optionListener = new OptionListener();
 		relation.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -153,6 +155,58 @@ public class Modify extends JInternalFrame {
 		this.dispose();
 	}
 	
+	private void clear() {
+		where = new ArrayList<String>();
+		comboBoxPanel.removeAll();
+		labelPanel.removeAll();
+		textFieldPanel.removeAll();
+		HashMap<String, ArrayList<String>> query = db.get("*", relation.getSelectedItem().toString());
+		columns = query.keySet().toArray(new String[0]);
+		constrains = new JComboBox[columns.length];
+		JLabel[] labels = new JLabel[columns.length];
+		modifications = new JTextField[columns.length];
+		comboBoxPanel.setLayout(new GridLayout(1,columns.length));
+		labelPanel.setLayout(new GridLayout(1,columns.length));
+		textFieldPanel.setLayout(new GridLayout(1,columns.length));
+		
+		matchTable = new JTable(db.convert(query), query.keySet().toArray()) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		JScrollPane scrollPane = new JScrollPane(matchTable);
+		scrollPane.setPreferredSize(new Dimension(720, 170));
+		matchTable.setFillsViewportHeight(true);
+		
+		
+		int i = 0;
+		for(String column : columns){
+			ArrayList<String> list = query.get(column);
+			list.add("ALL");
+			Collections.reverse(list);
+			constrains[i] = new JComboBox(new LinkedHashSet(list).toArray());
+			constrains[i].setSelectedItem("ALL");
+			constrains[i].addActionListener(optionListener);
+			labels[i] = new JLabel("Set "+columns[i]+":");
+			modifications[i] = new JTextField();
+			comboBoxPanel.add(constrains[i]);
+			labelPanel.add(labels[i]);
+			textFieldPanel.add(modifications[i]);
+			i++;
+		}
+
+		tablePanel.removeAll();
+		tablePanel.add(scrollPane);
+
+		comboBoxPanel.updateUI();
+		labelPanel.updateUI();
+		textFieldPanel.updateUI();
+		tablePanel.updateUI();
+		if(!delete.isEnabled()) delete.setEnabled(true);
+		if(!modify.isEnabled()) modify.setEnabled(true);
+	}
+	
 	private class ButtonListener implements ActionListener{
 
 		@Override
@@ -189,32 +243,73 @@ public class Modify extends JInternalFrame {
 					//Not confirmed delete, do nothing!
 				}
 			} else if((JButton)e.getSource() == modify){
+				boolean everythingOK = true;
 				ArrayList<String> set = new ArrayList<String>();
 				for(int i =0;i<modifications.length;i++){
-					String text = modifications[i].getText().replaceAll("[^a-zA-Z0-9/.-]|--", "");
-					//String text = modifications[i].getText();
-					if(!text.equals("")){
-						set.add(columns[i]+" = '"+text+"'");
+					String text = modifications[i].getText();
+					//Make sure the data is OK
+					if (!text.equals("")) {
+						if (columns[i].matches("brand_name")) {
+							text = text.replaceAll("[^a-zA-Z/.-/ ]|-[-]+", "")
+									.replaceAll(" +", " ");
+						} else if (columns[i]
+								.matches("rating|relation_number|broker_number|title_number")) {
+							try {
+								Integer.parseInt(text
+										.replaceAll("[^0-9/.]", ""));
+								text = text.replaceAll("[^0-9/.]", "");
+							} catch (Exception ex) {
+								everythingOK = false;
+								break;
+							}
+						} else if (columns[i]
+								.matches("current_value|initial_value|balance|capital")) {
+							try {
+								Double.parseDouble(text.replaceAll("[^0-9/.]",
+										""));
+								text = text.replaceAll("[^0-9/.]", "");
+							} catch (Exception ex) {
+								everythingOK = false;
+								break;
+							}
+						} else if (columns[i].matches("created_day|time")) {
+							text = text.replaceAll("[^0-9-]|-[-]+", "");
+						} else {
+							text = text.replaceAll("[^a-zA-Z/.-]|-[-]+", "")
+									.toUpperCase();
+						}
+						set.add(columns[i] + " = '" + text + "'");
 					}
 				}
-				int result = db.modify(relation.getSelectedItem().toString(), where.toArray(new String[0]), set.toArray(new String[0]));
-				if (result > 0) {
-					JOptionPane
-							.showMessageDialog(getContentPane(),
-									"Successfully modified "
-											+ result
-											+ " entries from "
-											+ relation.getSelectedItem()
-													.toString());
-					reset();
-				} else if (result == 0) {
-					JOptionPane.showMessageDialog(null,
-							"Nothing modified! Error occurred!", "WARNING",
-							JOptionPane.INFORMATION_MESSAGE);
-				} else if (result == -2) {
-					JOptionPane.showMessageDialog(null,
-							"Nothing modified as no parameter was given!", "WARNING",
-							JOptionPane.INFORMATION_MESSAGE);
+				if(everythingOK){
+					int result = db.modify(relation.getSelectedItem().toString(), where.toArray(new String[0]), set.toArray(new String[0]));
+					if (result > 0) {
+						JOptionPane.showMessageDialog(getContentPane(),"Successfully modified "
+												+ result
+												+ " entries from "
+												+ relation.getSelectedItem()
+														.toString());
+						//new OptionListener().actionPerformed(null);
+						clear();
+					} else if (result == 0) {
+						JOptionPane.showMessageDialog(null,
+								"Nothing modified! Error occurred!", "WARNING",
+								JOptionPane.INFORMATION_MESSAGE);
+					} else if (result == -2) {
+						JOptionPane.showMessageDialog(null,
+								"Nothing modified as no parameter was given!", "WARNING",
+								JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						JOptionPane.showMessageDialog(null,
+								"An error occoured!\n\n"
+								+ "Please remember that only these types of values are admitted:\n"
+								+ "- Dates in the form 'YYYY-MM-DD'\n"
+								+ "- Integers in the form '123'\n"
+								+ "- Floating point values in the form '12.3'\n"
+								+ "- Alphanumerical literals in the form 'Abc12.3'\n\n"
+								+ "Also note that you cannot change key values for more than one entry!", "WARNING",
+								JOptionPane.ERROR_MESSAGE);
+					}
 				} else {
 					JOptionPane.showMessageDialog(null,
 							"An error occoured!\n\n"
@@ -222,11 +317,10 @@ public class Modify extends JInternalFrame {
 							+ "- Dates in the form 'YYYY-MM-DD'\n"
 							+ "- Integers in the form '123'\n"
 							+ "- Floating point values in the form '12.3'\n"
-							+ "- Alphanumerical literals in the form 'Abc12.3'\n\n"
+							+ "- Alphanumerical literals in the form 'Abc.d' or 'Facebook Inc.'\n\n"
 							+ "Also note that you cannot change key values for more than one entry!", "WARNING",
 							JOptionPane.ERROR_MESSAGE);
 				}
-				//Save has been pressed
 			}
 		}
 		
