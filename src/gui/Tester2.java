@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import core.Database;
 
 public class Tester2 {
 	private static JMenuItem accountTable, brokerTable, companyTable, stockTable, titleTable;
-	private static JMenuItem newAccount, newBroker, newCompany, newStock, newTitle;
+	private static JMenuItem newAccount, newBroker, newCompany, newStock, newTitle, allowAutocomplete;
 	private static JMenuItem createSchema, destroySchema, clearAllData, loadData;
 	private static JMenuItem modify, delete;
     private static MyFrame frame;
@@ -43,6 +44,7 @@ public class Tester2 {
     private static Database db;
     private static Container con;
     private static HashMap<String, String> schema;
+    private static boolean autocomplete = true;
     
     private static HashMap<String, JInternalFrame> tables = new HashMap<String, JInternalFrame>();
 
@@ -191,6 +193,24 @@ public class Tester2 {
         newTitle = new JMenuItem("Insert New Title");
         newMenu.add(newTitle);
         newTitle.addActionListener(listen);
+        
+        newMenu.addSeparator();
+        
+        allowAutocomplete  = new JMenuItem("Toggle autocomplete OFF");
+        newMenu.add(allowAutocomplete);
+        allowAutocomplete.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(autocomplete){
+					allowAutocomplete.setText("Toggle autocomplete ON");
+					autocomplete = false;
+				} else {
+					allowAutocomplete.setText("Toggle autocomplete OFF");
+					autocomplete = true;
+				}
+			}
+        });
         
         /////////DB MENU
         final JMenuItem advanced = new JMenuItem("Enable Database Operations");
@@ -347,8 +367,56 @@ public class Tester2 {
         	if (delete.isArmed()) {
         		desktopFrame.add(new Delete(schema,db));
             }
+        	//newAccount, newBroker, newCompany, newStock, newTitle;
         	if (newAccount.isArmed()) {
-        		InsertPanels.insertBankAccount(frame);
+        		try {
+					int result = db.add((autocomplete?InsertPanels.insertAutocompleteBankAccount(frame, db):InsertPanels.insertBankAccount(frame)));
+					if (result != 1){
+						JOptionPane.showMessageDialog(frame, "Insertion unsuccessfull. Please check dependencies!");
+					}
+				} catch (Exception e) {
+					//exited
+				}
+            }
+        	if (newBroker.isArmed()) {
+        		try {
+        			int result = db.add((autocomplete?InsertPanels.insertAutocompleteBroker(frame, db):InsertPanels.insertBroker(frame)));
+        			if (result != 1){
+            			JOptionPane.showMessageDialog(frame, "Insertion unsuccessfull. Please check dependencies!");
+            		}
+        		} catch (Exception e){
+        			//exited
+        		}
+            }
+        	if (newCompany.isArmed()) {
+        		try {
+        			int result = db.add((autocomplete?InsertPanels.insertAutocompleteCompany(frame, db):InsertPanels.insertCompany(frame)));
+					if (result != 1){
+						JOptionPane.showMessageDialog(frame, "Insertion unsuccessfull. Please check dependencies!");
+					}
+				} catch (Exception e) {
+					// exited
+				}
+            }
+        	if (newStock.isArmed()) {
+        		try {
+        			int result = db.add((autocomplete?InsertPanels.insertAutocompleteStockValue(frame, db):InsertPanels.insertStockValue(frame)));
+					if (result != 1){
+						JOptionPane.showMessageDialog(frame, "Insertion unsuccessfull. Please check dependencies!");
+					}
+				} catch (Exception e) {
+					// exited
+				}
+            }
+        	if (newTitle.isArmed()) {
+        		try {
+        			int result = db.add((autocomplete?InsertPanels.insertAutocompleteTitle(frame, db):InsertPanels.insertTitle(frame)));
+					if (result != 1){
+						JOptionPane.showMessageDialog(frame, "Insertion unsuccessfull. Please check dependencies!");
+					}
+				} catch (Exception e) {
+					// exited
+				}
             }
         }
     }

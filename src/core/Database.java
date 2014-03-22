@@ -150,6 +150,31 @@ public class Database {
 		}
 		
 		/**
+		 * Method to Insert into database, given a DatabaseType.
+		 * 
+		 * @param dt A class that inherits dt and its "convertToInsert" method.
+		 */
+		public int add(DatabaseType dt){
+			int itWorked = -1;
+			Statement statement = null;
+			try {
+				statement = db.createStatement();
+				String query = dt.convertToInsert();
+				System.out.println(query);
+				itWorked = statement.executeUpdate(query);
+			} catch (SQLException e) {
+				//e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+			return itWorked;
+		}
+		
+		/**
 		 * Method to SELECT certain columns from a RELATION, WHERE there are constrains.
 		 * 
 		 * @param select Should be something like "number,id,name" mind dividing the columns by comma only!

@@ -44,8 +44,9 @@ public class Company implements DatabaseType {
 
 	@Override
 	public String convertToInsert() {
-		// TODO Auto-generated method stub
-		return null;
+		String result = "INSERT INTO company(market_code, brand_name, rating, capital, currency)\n";
+		result += "VALUES ('"+market_code+ "', '" + brand_name+ "', " + rating+ ", " + capital+ ", '" + currency+"');";
+		return result;
 	}
 
 }

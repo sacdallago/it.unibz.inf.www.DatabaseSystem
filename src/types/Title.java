@@ -64,7 +64,8 @@ public class Title implements DatabaseType  {
 
 	@Override
 	public String convertToInsert() {
-		// TODO Auto-generated method stub
-		return null;
+		String result = "INSERT INTO title(title_number, market_code, iban, bic, broker_number, created_day, initial_value, initial_value_currency)\n";
+		result += "VALUES ("+title_number+ ", '" + market_code+ "', '" + iban+ "', '" + bic+ "', " + (broker_number==null ? "NULL" : broker_number) + ", '" + created_day+ "', " + initial_value+ ", '" + initial_value_currency+"');";
+		return result;
 	}
 }

@@ -70,7 +70,13 @@ public class Tester {
 		//System.out.println("TESTtest123.tes t--comment".replaceAll("[^a-zA-Z0-9/.]|--", ""));
 		//System.out.println("2013-12-23".replaceAll("[^a-zA-Z0-9/.-]|--", ""));
 		
-		InsertPanels.insertBankAccount(null);
+		//InsertPanels.insertBankAccount(null);
+		//InsertPanels.insertCompany(null);
+		//InsertPanels.insertStockValue(null);
+		//InsertPanels.insertTitle(null);
+		//String iban = "1234-56-78";
+		//String iban = "1234-5-7";
+		//System.out.println((iban.length()>31) +" "+ iban.matches("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"));
 	}
 
 }

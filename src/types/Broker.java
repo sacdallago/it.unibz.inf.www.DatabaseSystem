@@ -31,7 +31,8 @@ public class Broker implements DatabaseType  {
 
 	@Override
 	public String convertToInsert() {
-		// TODO Auto-generated method stub
-		return null;
+		String result = "INSERT INTO broker(broker_number, rating, market_code)\n";
+		result += "VALUES ("+broker_number+ ", " + rating+ ", '" + market_code+"');";
+		return result;
 	}
 }

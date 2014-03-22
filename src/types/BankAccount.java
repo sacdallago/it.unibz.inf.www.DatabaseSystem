@@ -65,7 +65,8 @@ public class BankAccount implements DatabaseType  {
 
 	@Override
 	public String convertToInsert() {
-		// TODO Auto-generated method stub
-		return null;
+		String result = "INSERT INTO bank_account(relation_number, iban, bic, type, balance, account_currency, local_currency, market_code)\n";
+		result += "VALUES ("+relation_number+ ", '" + iban+ "', '" + bic+ "', '" + type+ "', " + balance+ ", '" + account_currency+ "', '" + local_currency+ "', '" + market_code + "');";
+		return result;
 	}
 }

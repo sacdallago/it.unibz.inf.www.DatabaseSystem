@@ -44,7 +44,8 @@ public class StockValue implements DatabaseType  {
 
 	@Override
 	public String convertToInsert() {
-		// TODO Auto-generated method stub
-		return null;
+		String result = "INSERT INTO stock_value(time, market_code, title_number, current_value, currency)\n";
+		result += "VALUES ('"+time+ "', '" + market_code+ "', " + title_number+ ", " + current_value+ ", '" + currency+"');";
+		return result;
 	}
 }
