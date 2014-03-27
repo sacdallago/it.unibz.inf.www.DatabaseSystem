@@ -3,6 +3,7 @@ package gui;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.DriverManager;
 import java.sql.Connection;
@@ -14,6 +15,7 @@ import java.util.Map;
 import org.postgresql.*;
 
 import core.Database;
+import utilities.*;
 
 public class Tester {
 
@@ -79,6 +81,10 @@ public class Tester {
 		//System.out.println((iban.length()>31) +" "+ iban.matches("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"));
 		//String text = "Facebook 21 Inc.";
 		//System.out.println(text.replaceAll("[^a-zA-Z/.-/ ]|-[-]+", "").replaceAll(" +", " "));
+		Utilities.updateConversions(null);
+		System.out.println(Utilities.convert(1, "EUR", "USD"));
+		System.out.println(Utilities.convert(1, "USD", "EUR"));
+		System.out.println(Utilities.convert(1, "USD", "USD"));
 	}
 
 }

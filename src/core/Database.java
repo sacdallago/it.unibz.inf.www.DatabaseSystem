@@ -10,7 +10,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.TreeMap;
 
 import types.*;
 
@@ -61,6 +65,58 @@ public class Database {
 			return result;
 		}
 		
+		/**
+		 * Creates a view for the companies that are banks! (based on which companies appear in the bank accounts)
+		 */
+		public void createBankView(){
+			Statement statement = null;
+			try {
+				statement = db.createStatement();
+				String query = "DROP VIEW IF EXISTS bank;\n"+
+						"CREATE VIEW bank AS \n"+
+						"SELECT rating, brand_name, c.market_code, COUNT(c.market_code) as open_accounts \n"+
+						"FROM company c, bank_account b \n"+
+						"WHERE c.market_code = b.market_code \n"+
+						"group by c.market_code;";
+				System.out.println(query);
+				statement.executeUpdate(query);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+		}
+		/**
+		 * Creates a view for the companies that are NOT banks! (based on which companies appear in the bank accounts)
+		 */
+		public void createNotBankView(){
+			Statement statement = null;
+			try {
+				statement = db.createStatement();
+				String query = "CREATE OR REPLACE VIEW not_bank AS \n"+
+						"SELECT rating, brand_name, c.market_code \n"+
+						"FROM company c, (SELECT c.market_code \n"+
+						"		FROM company c \n"+
+						"		EXCEPT (SELECT DISTINCT market_code \n"+
+						"				FROM bank_account)) b \n"+
+						"WHERE c.market_code = b.market_code;";
+				System.out.println(query);
+				statement.executeUpdate(query);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+		}
+		
 		private String setCreator(String conditions[]){
 			String result = "";
 			if(conditions.length == 0){
@@ -75,7 +131,7 @@ public class Database {
 			return result.substring(0,result.length()-2);
 		}
 		
-		public Object[][] convert(HashMap<String,ArrayList<String>> query){
+		public Object[][] convert(Map<String,ArrayList<String>> query){
 			Object[][] result;
 			int entries = query.get(query.keySet().iterator().next()).size();
 			result = new Object[entries][query.keySet().size()];
@@ -437,6 +493,162 @@ public class Database {
 				}
 				resultSet.close();
 				statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (resultSet != null) {
+			        try {
+			        	resultSet.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+			return list;
+		}
+		
+		/**
+		 * Method to get a set of dates and values for a given title number
+		 * 
+		 * @param title_number Title number
+		 */
+		public TreeMap<String,Double> getTitleValues(String title_number,String market_code, String currency){
+			TreeMap<String,Double> list = new TreeMap<String,Double>();
+			Statement statement = null;
+			ResultSet resultSet = null;
+			try {
+				statement = db.createStatement();
+				String query = "SELECT time, current_value, currency FROM stock_value WHERE title_number='"+title_number+"' AND market_code='"+market_code+"';";
+				System.out.println(query);
+				resultSet = statement.executeQuery(query);
+				while (resultSet.next()){
+					double value = utilities.Utilities.convert(Double.parseDouble(resultSet.getString("current_value")), resultSet.getString("currency"), currency);
+					if (value<0.000000) return null;
+					list.put(resultSet.getString("time"),value);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (resultSet != null) {
+			        try {
+			        	resultSet.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+			return list;
+		}
+		
+		/**
+		 * Method to get a map of all companies (based on their rating)
+		 * 
+		 * @param title_number Title number
+		 * @return TreeMap<String,LinkedList<String>>, where the key is rating+market_code, and the list contains rating,brand_name,market_code
+		 */
+		public TreeMap<String,LinkedList<String>> getCompaniesRanking(){
+			TreeMap<String,LinkedList<String>> list = new TreeMap<String,LinkedList<String>>(Collections.reverseOrder());
+			Statement statement = null;
+			ResultSet resultSet = null;
+			try {
+				statement = db.createStatement();
+				String query = "SELECT market_code, brand_name, rating FROM company ;";
+				System.out.println(query);
+				resultSet = statement.executeQuery(query);
+				while (resultSet.next()){
+					list.put(resultSet.getString("rating")+resultSet.getString("market_code"), new LinkedList<String>());
+					LinkedList<String> current = list.get(resultSet.getString("rating")+resultSet.getString("market_code"));
+					current.add(resultSet.getString("rating"));
+					current.add(resultSet.getString("brand_name"));
+					current.add(resultSet.getString("market_code"));
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (resultSet != null) {
+			        try {
+			        	resultSet.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+			return list;
+		}
+		
+		/**
+		 * Method to get a map of all bank companies (based on their rating)
+		 * 
+		 * @param title_number Title number
+		 * @return TreeMap<String,LinkedList<String>>, where the key is rating+market_code, and the list contains rating,brand_name,market_code,open_accounts (how many bank account are referenced to that company)
+		 */
+		public TreeMap<String,LinkedList<String>> getBanksRanking(){
+			createBankView();
+			TreeMap<String,LinkedList<String>> list = new TreeMap<String,LinkedList<String>>(Collections.reverseOrder());
+			Statement statement = null;
+			ResultSet resultSet = null;
+			try {
+				statement = db.createStatement();
+				String query = "SELECT *  FROM bank ;";
+				System.out.println(query);
+				resultSet = statement.executeQuery(query);
+				while (resultSet.next()){
+					list.put(resultSet.getString("rating")+resultSet.getString("market_code"), new LinkedList<String>());
+					LinkedList<String> current = list.get(resultSet.getString("rating")+resultSet.getString("market_code"));
+					current.add(resultSet.getString("rating"));
+					current.add(resultSet.getString("brand_name"));
+					current.add(resultSet.getString("market_code"));
+					current.add(resultSet.getString("open_accounts"));
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+			    if (statement != null) {
+			        try {
+			        	statement.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			    if (resultSet != null) {
+			        try {
+			        	resultSet.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+			}
+			return list;
+		}
+		
+		/**
+		 * Method to get a map of all NON-bank companies (based on their rating)
+		 * 
+		 * @param title_number Title number
+		 * @return TreeMap<String,LinkedList<String>>, where the key is rating+market_code, and the list contains rating,brand_name,market_code,open_accounts (how many bank account are referenced to that company)
+		 */
+		public TreeMap<String,LinkedList<String>> getNonBanksRanking(){
+			createNotBankView();
+			TreeMap<String,LinkedList<String>> list = new TreeMap<String,LinkedList<String>>(Collections.reverseOrder());
+			Statement statement = null;
+			ResultSet resultSet = null;
+			try {
+				statement = db.createStatement();
+				String query = "SELECT *  FROM not_bank ;";
+				System.out.println(query);
+				resultSet = statement.executeQuery(query);
+				while (resultSet.next()){
+					list.put(resultSet.getString("rating")+resultSet.getString("market_code"), new LinkedList<String>());
+					LinkedList<String> current = list.get(resultSet.getString("rating")+resultSet.getString("market_code"));
+					current.add(resultSet.getString("rating"));
+					current.add(resultSet.getString("brand_name"));
+					current.add(resultSet.getString("market_code"));
+				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {

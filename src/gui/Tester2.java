@@ -2,12 +2,15 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
@@ -20,7 +23,8 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import utilities.Timer;
+
+import utilities.Utilities;
 import core.Container;
 import core.Database;
 
@@ -29,6 +33,7 @@ public class Tester2 {
 	private static JMenuItem newAccount, newBroker, newCompany, newStock, newTitle, allowAutocomplete;
 	private static JMenuItem createSchema, destroySchema, clearAllData, loadData;
 	private static JMenuItem modify, delete;
+	private static JMenuItem valueChart, companyRanking, bankRanking, nonBankRanking;
     private static MyFrame frame;
     private static JDesktopPane desktopFrame;
     private static Database db;
@@ -58,14 +63,37 @@ public class Tester2 {
         JMenu tablesMenu = new JMenu("Tables");
         JMenu newMenu = new JMenu("New");
         JMenu databaseMenu = new JMenu("Database");
+        JMenu analysis = new JMenu("Analysis");
         
         bar.add(mainMenu);
+        bar.add(analysis);
         bar.add(databaseMenu);
         mainMenu.add(newMenu);
         bar.add(tablesMenu);
         
         
         desktopFrame = new JDesktopPane();
+        Listener listen = new Listener();
+        
+        /////////ANALYSIS
+        valueChart = new JMenuItem("Value Chart");
+        valueChart.addActionListener(listen);
+        analysis.add(valueChart);
+        
+        analysis.addSeparator();
+        
+        companyRanking = new JMenuItem("All companies Ranking");
+        companyRanking.addActionListener(listen);
+        analysis.add(companyRanking);
+        
+        bankRanking = new JMenuItem("Banks' Ranking");
+        bankRanking.addActionListener(listen);
+        analysis.add(bankRanking);
+        
+        nonBankRanking = new JMenuItem("Non-Banks' Ranking");
+        nonBankRanking.addActionListener(listen);
+        analysis.add(nonBankRanking);
+        
         
         /////////NAMING
         tables.put("accounts",new BankAccounts(con));
@@ -83,8 +111,6 @@ public class Tester2 {
         for(JInternalFrame a : tables.values()){
         	a.hide();
         }
-        
-        Listener listen = new Listener();
         
         /////////TABLES
         accountTable = new JMenuItem("Show Accounts");
@@ -136,7 +162,7 @@ public class Tester2 {
 			    					((Companies) tables.get("companies")).refresh();
 			    					((StockValues) tables.get("stockvalues")).refresh();
 			    					((Titles) tables.get("titles")).refresh();
-			    					lastRefresh.setText("Last Refresh: "+Timer.getTime());
+			    					lastRefresh.setText("Last Refresh: "+Utilities.getTime());
 			    				} catch (InterruptedException e) {
 			    				}
 		            		}
@@ -160,7 +186,7 @@ public class Tester2 {
 				((Companies) tables.get("companies")).refresh();
 				((StockValues) tables.get("stockvalues")).refresh();
 				((Titles) tables.get("titles")).refresh();
-				lastRefresh.setText("Last Refresh: "+Timer.getTime());
+				lastRefresh.setText("Last Refresh: "+Utilities.getTime());
 			}
         });
         
@@ -359,6 +385,27 @@ public class Tester2 {
             }
         	if (delete.isArmed()) {
         		desktopFrame.add(new Delete(schema,db));
+            }
+        	if (valueChart.isArmed()) {
+        		frame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        		Utilities.updateConversions(frame);
+        		desktopFrame.add(new ValueChart(db));
+        		frame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
+        	if (companyRanking.isArmed()) {
+        		frame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        		desktopFrame.add(new BankRank(db,"All"));
+        		frame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
+        	if (bankRanking.isArmed()) {
+        		frame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        		desktopFrame.add(new BankRank(db,"Banks"));
+        		frame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
+        	if (nonBankRanking.isArmed()) {
+        		frame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        		desktopFrame.add(new BankRank(db,"Non-Banks"));
+        		frame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
         	//newAccount, newBroker, newCompany, newStock, newTitle;
         	if (newAccount.isArmed()) {
